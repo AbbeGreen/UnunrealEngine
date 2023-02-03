@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 #define QUITKEY SDLK_ESCAPE
 #define WIDTH 1024
@@ -28,6 +29,12 @@ struct Point {
     int y;
 };
 
+struct Tri {
+    struct Point p1;
+    struct Point p2;
+    struct Point p3;
+};
+
 struct Point create_point(int x, int y) {
 
     struct Point p;
@@ -39,6 +46,52 @@ struct Point create_point(int x, int y) {
 
 }
 
+struct Tri create_tri(int x1, int y1, int x2, int y2, int x3, int y3) {
+
+    struct Tri t;
+
+    t.p1 = create_point(x1, y1);
+    t.p2 = create_point(x2, y2);
+    t.p3 = create_point(x3, y3);
+
+    return t;
+}
+
+int interpolate(struct Point p1, struct Point p2, int x) {
+    
+    int y;
+    
+    y = p1.y + (p2.y - p1.y) * (x - p1.x) / (p2.x - p1.x);
+
+    // this can be heavily optimized but is left for now.
+
+    return y;
+
+}
+
+int rasterize_triangle(struct Tri tri) {
+    // define left- or right-facing triangle
+    bool right_facing = false;
+
+    struct Point a = tri.p1;
+    struct Point b = tri.p2;
+    struct Point c = tri.p3;
+
+    //x_sorted = malloc(sizeof(int*), 3);
+    //for (int i = 0; i < )
+    return 0;
+
+}
+
+int length(int *list) {
+    int i = 0; 
+    while (*list != '\0') {
+        list++;
+        i++;
+    }
+    return i;
+}
+
 void init_setup() {
     srand((int)time(NULL));
     SDL_Init(SDL_INIT_EVERYTHING);
@@ -46,14 +99,6 @@ void init_setup() {
     if (!screen) {
         printf("Failed to create window!");
     }
-
-    SDL_Surface *window_surface = SDL_GetWindowSurface(screen);
-    unsigned int *pixels = window_surface->pixels;
-    int x = 10;
-    int y = 30;
-
-    int width = window_surface->w;
-    pixels[x + y * width] = 0xffffffff;
 }
 
 void finish() {
@@ -78,12 +123,30 @@ void draw_rectangle() {
 }
 
 void game_loop() {
+
     int game_running = 1;
 
     struct Point p1 = create_point(1, 2);
 
+    SDL_Surface *window_surface = SDL_GetWindowSurface(screen);
+    unsigned int *pixels = window_surface->pixels;
+    int x = 30;
+    int y = 30;
+
+    int width = window_surface->w;
+    SDL_UpdateWindowSurface(screen);
+
+    pixels[x + y * width] = 0x00ffffff;
+    for (int i = 0; i < 300; i++) {
+        for (int j = 0; j < 300; j++) {
+            pixels[j + i * width] = 0xff4fffa0;
+        }
+    }
+
     while (game_running) {
-        draw_rectangle();
+        //draw_rectangle();
+        
+        SDL_UpdateWindowSurface(screen);
 
         while (SDL_PollEvent(&event)) {
             switch (event.type) {
