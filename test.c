@@ -27,6 +27,7 @@ int rectCount = 0;
 struct Point {
     int x;
     int y;
+    char name;
 };
 
 struct Tri {
@@ -35,12 +36,13 @@ struct Tri {
     struct Point p3;
 };
 
-struct Point create_point(int x, int y) {
+struct Point create_point(int x, int y, char name) {
 
     struct Point p;
 
     p.x = x;
     p.y = y;
+    p.name = name;
 
     return p;
 
@@ -50,9 +52,9 @@ struct Tri create_tri(int x1, int y1, int x2, int y2, int x3, int y3) {
 
     struct Tri t;
 
-    t.p1 = create_point(x1, y1);
-    t.p2 = create_point(x2, y2);
-    t.p3 = create_point(x3, y3);
+    t.p1 = create_point(x1, y1, 'a');
+    t.p2 = create_point(x2, y2, 'b');
+    t.p3 = create_point(x3, y3, 'c');
 
     return t;
 }
@@ -77,20 +79,50 @@ int rasterize_triangle(struct Tri tri) {
     struct Point b = tri.p2;
     struct Point c = tri.p3;
 
-    //x_sorted = malloc(sizeof(int*), 3);
-    //for (int i = 0; i < )
+    struct Point x_sorted[3] = {a, b, c};
+    struct Point y_sorted[3] = {a, b, c};
+
+    for (int i = 0; i < 2; i++) {
+        for (int j = 0; j < 2; j++) {
+            if (x_sorted[j].x >= x_sorted[j+1].x) {
+                struct Point tmp = x_sorted[j];
+                x_sorted[j] = x_sorted[j+1];
+                x_sorted[j+1] = tmp;
+            }    
+        }
+    }
+
+    for (int i = 0; i < 2; i++) {
+        for (int j = 0; j < 2; j++) {
+            if (y_sorted[j].y >= y_sorted[j+1].y) {
+                struct Point tmp = y_sorted[j];
+                y_sorted[j] = y_sorted[j+1];
+                y_sorted[j+1] = tmp;
+            }    
+        }
+    }
+
+    for (int i = 0; i < 3; i++) {
+        printf("x sorted:\n");
+        printf("%d\t%c\n", x_sorted[i].x, x_sorted[i].name);
+        
+    }
+
+    for (int i = 0; i < 3; i++) {
+        printf("y sorted:\n");
+        printf("%d\t%c\n", y_sorted[i].y, y_sorted[i].name);
+    }
+
+    struct Point *top, *middle, *bottom;
+
+    top = &y_sorted[0];
+    middle = &y_sorted[1];
+    bottom = &y_sorted[2];
+
     return 0;
 
 }
 
-int length(int *list) {
-    int i = 0; 
-    while (*list != '\0') {
-        list++;
-        i++;
-    }
-    return i;
-}
 
 void init_setup() {
     srand((int)time(NULL));
@@ -126,8 +158,6 @@ void game_loop() {
 
     int game_running = 1;
 
-    struct Point p1 = create_point(1, 2);
-
     SDL_Surface *window_surface = SDL_GetWindowSurface(screen);
     unsigned int *pixels = window_surface->pixels;
     int x = 30;
@@ -136,9 +166,9 @@ void game_loop() {
     int width = window_surface->w;
     SDL_UpdateWindowSurface(screen);
 
-    pixels[x + y * width] = 0x00ffffff;
-    for (int i = 0; i < 300; i++) {
-        for (int j = 0; j < 300; j++) {
+    //pixels[x + y * width] = 0x00ffffff;
+    for (int i = 100; i < 300; i++) {
+        for (int j = 100; j < 300; j++) {
             pixels[j + i * width] = 0xff4fffa0;
         }
     }
@@ -168,6 +198,11 @@ void game_loop() {
 }
 
 int main(int argc, char **arg) {
+    
+    //printf("hello");
+    struct Tri tri = create_tri(20, 20, 20, 40, 40, 40);
+    rasterize_triangle(tri);
+
     init_setup();
     game_loop();
     finish();
