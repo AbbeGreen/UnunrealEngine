@@ -128,6 +128,7 @@ int rasterize_triangle(struct Tri tri) {
     int width = window_surface->w;
 
     struct Point *top, *middle, *bottom;
+    int from, to;
 
     // facedness is defined as the direction of (the normal of) the long side
     bool right_facing;
@@ -138,21 +139,36 @@ int rasterize_triangle(struct Tri tri) {
 
     right_facing = middle->x < bottom->x;
 
-    if (right_facing) {
-        for (int i = top->y; i < middle->y; i++) {
-            int from = interpolate_x(*top, *middle, i);
-            int to = interpolate_x(*top, *bottom, i);
-            //printf("from: %d\tto:%d\n", from, to);
-            for (int j = from; j < to; j++) {
-                pixels[j + i * width] = 0xff4fffa0;
-            }
+    for (int i = top->y; i < middle->y; i++) {
+        if (right_facing) {
+
+            from = interpolate_x(*top, *middle, i);
+            to = interpolate_x(*top, *bottom, i);
+
+        } else {
+
+            from = interpolate_x(*top, *bottom, i);
+            to = interpolate_x(*top, *middle, i);
         }
-        for (int i = middle->y; i < bottom->y; i++) {
-            int from = interpolate_x(*middle, *bottom, i);
-            int to = interpolate_x(*top, *bottom, i);
-            for (int j = from; j < to; j++) {
-                pixels[j + i * width] = 0xff4fffa0;
-            }
+        //printf("from: %d\tto:%d\n", from, to);
+        for (int j = from; j < to; j++) {
+            pixels[j + i * width] = 0xff4fffa0;
+        }
+    }
+    for (int i = middle->y; i < bottom->y; i++) {
+        if (right_facing) {
+            
+            from = interpolate_x(*middle, *bottom, i);
+            to = interpolate_x(*top, *bottom, i);
+
+        } else {
+
+            from = interpolate_x(*top, *bottom, i);
+            to = interpolate_x(*middle, *bottom, i);
+
+        }
+        for (int j = from; j < to; j++) {
+            pixels[j + i * width] = 0xff4fffa0;
         }
     }
 
@@ -233,7 +249,7 @@ void game_loop(struct Tri tri) {
 int main(int argc, char **arg) {
     
     //printf("hello");
-    struct Tri tri = create_tri(300, 300, 150, 450, 500, 500);
+    struct Tri tri = create_tri(100, 100, 300, 100, 100, 300);
 
     init_setup();
     game_loop(tri);
