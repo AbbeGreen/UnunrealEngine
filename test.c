@@ -34,6 +34,7 @@ struct Tri {
     struct Point p1;
     struct Point p2;
     struct Point p3;
+    int c;
 };
 
 struct Point create_point(int x, int y, char name) {
@@ -48,13 +49,14 @@ struct Point create_point(int x, int y, char name) {
 
 }
 
-struct Tri create_tri(int x1, int y1, int x2, int y2, int x3, int y3) {
+struct Tri create_tri(int x1, int y1, int x2, int y2, int x3, int y3, int c) {
 
     struct Tri t;
 
     t.p1 = create_point(x1, y1, 'a');
     t.p2 = create_point(x2, y2, 'b');
     t.p3 = create_point(x3, y3, 'c');
+    t.c = c;
 
     return t;
 }
@@ -81,7 +83,7 @@ int interpolate_y(struct Point p1, struct Point p2, int x) {
 
 }
 
-int rasterize_triangle(struct Tri tri) {
+int rasterize_triangle(struct Tri tri, int offset) {
     // define left- or right-facing triangle
     struct Point a = tri.p1;
     struct Point b = tri.p2;
@@ -109,19 +111,6 @@ int rasterize_triangle(struct Tri tri) {
             }    
         }
     }
-    /*
-    for (int i = 0; i < 3; i++) {
-        printf("x sorted:\n");
-        printf("%d\t%c\n", x_sorted[i].x, x_sorted[i].name);
-        
-    }
-
-    for (int i = 0; i < 3; i++) {
-        printf("y sorted:\n");
-        printf("%d\t%c\n", y_sorted[i].y, y_sorted[i].name);
-    }
-
-    */
 
     SDL_Surface *window_surface = SDL_GetWindowSurface(screen);
     unsigned int *pixels = window_surface->pixels;
@@ -139,7 +128,7 @@ int rasterize_triangle(struct Tri tri) {
 
     right_facing = middle->x < bottom->x;
 
-    for (int i = top->y; i < middle->y; i++) {
+    for (int i = top->y; i < middle->y; i += offset) {
         if (right_facing) {
 
             from = interpolate_x(*top, *middle, i);
@@ -150,12 +139,13 @@ int rasterize_triangle(struct Tri tri) {
             from = interpolate_x(*top, *bottom, i);
             to = interpolate_x(*top, *middle, i);
         }
-        //printf("from: %d\tto:%d\n", from, to);
-        for (int j = from; j < to; j++) {
-            pixels[j + i * width] = 0xff4fffa0;
+        for (int o = 0; o < offset; o++) {
+            for (int j = from; j < to; j++) {
+                pixels[j + (i + o) * width] = tri.c;
+            }
         }
     }
-    for (int i = middle->y; i < bottom->y; i++) {
+    for (int i = middle->y; i < bottom->y; i += offset) {
         if (right_facing) {
             
             from = interpolate_x(*middle, *bottom, i);
@@ -165,10 +155,11 @@ int rasterize_triangle(struct Tri tri) {
 
             from = interpolate_x(*top, *bottom, i);
             to = interpolate_x(*middle, *bottom, i);
-
         }
-        for (int j = from; j < to; j++) {
-            pixels[j + i * width] = 0xff4fffa0;
+        for (int o = 0; o < offset; o++) {
+            for (int j = from; j < to; j++) {
+                pixels[j + (i + o) * (width)] = tri.c;
+            }
         }
     }
 
@@ -207,26 +198,19 @@ void draw_rectangle() {
     SDL_RenderPresent(renderer);
 }
 
-void game_loop(struct Tri tri) {
+void game_loop(struct Tri tris[], int tris_size) {
 
     int game_running = 1;
 
-    /*
-    for (int i = 100; i < 300; i++) {
-        for (int j = 100; j < 300; j++) {
-            pixels[j + i * width] = 0xff4fffa0;
-        }
-    }
-    */
-
-
     while (game_running) {
         //draw_rectangle();
-        
-        rasterize_triangle(tri);
+        for (int i = 0; i < tris_size; i++) {
 
+            rasterize_triangle(tris[i], 1);
+
+        }
         SDL_UpdateWindowSurface(screen);
-
+        
         while (SDL_PollEvent(&event)) {
             switch (event.type) {
                 case SDL_KEYDOWN:
@@ -249,10 +233,15 @@ void game_loop(struct Tri tri) {
 int main(int argc, char **arg) {
     
     //printf("hello");
-    struct Tri tri = create_tri(100, 100, 300, 100, 100, 300);
+    struct Tri tri = create_tri(100, 100, 300, 100, 100, 300, 0xff00ffff);
+    struct Tri tri2 = create_tri(100, 200, 500, 300, 400, 400, 0x00ff00ff);
+    struct Tri tri3 = create_tri(400, 400, 500, 500, 400, 500, 0xffff0000);
+    struct Tri tris[3] = {tri, tri2, tri3};
+
+    int tris_size = sizeof(tris) / sizeof(tris[0]);
 
     init_setup();
-    game_loop(tri);
+    game_loop(tris, tris_size);
     finish();
     return 0;
 }
