@@ -28,6 +28,15 @@ void mm_vec(float m1[4], float m2[4][4], float m3[4]) {
     }
 }
 
+void mm_t_vec(float m1[4][4], float m2[4], float m3[4]) {
+    for (int i = 0; i < 4; i++) {
+        m3[i] = 0;
+        for (int j = 0; j < 4; j++) {
+            m3[i] += m1[i][j] * m2[j];
+        }
+    }
+}
+
 void point2mat(struct Point *p, float m[]) {
     m[0] = p->x;
     m[1] = p->y;
@@ -47,7 +56,7 @@ void transform(struct Point *p, float m[4][4], float ret[4]) {
     float tmp[4];
 
     point2mat(p, tmp);
-    mm_vec(tmp, m, ret);
+    mm_t_vec(m, tmp, ret);
     mat2point(ret, p);
 
 }
@@ -58,6 +67,12 @@ void transform_tri(struct Tri *t, float m[4][4], float ret[4]) {
     transform(&(*t).p2, m, ret);
     transform(&(*t).p3, m, ret);
 }
+
+/*
+void projection(struct Tri *t) {
+    
+}
+*/
 
 /*
 int main() {

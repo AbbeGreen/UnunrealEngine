@@ -45,6 +45,13 @@ struct Tri create_tri(float x1, float y1, float z1, float w1, float x2, float y2
     return t;
 }
 
+void print_point(struct Point *p) {
+    printf("%f\t", p->x);
+    printf("%f\t", p->y);
+    printf("%f\t", p->z);
+    printf("%f\n", p->w);
+}
+
 int interpolate_x(struct Point p1, struct Point p2, int y) {
     
     int x;
@@ -100,3 +107,125 @@ struct Point *sort_points(struct Point *points, char attr) {
     }
     return sorted;
 }
+
+struct Tri *tesselate_block(int nx, int ny, int nz, float size) {
+    int n_tris = (nx * ny * (nz + 1) + nx * (ny + 1) * nz + (nx + 1) * ny * nz) * 2;
+    printf("n tris: %d\n", n_tris);
+    struct Tri *tris = (struct Tri*) malloc(sizeof(struct Tri) * n_tris);
+    struct Point points[nx + 1][ny + 1][nz + 1];
+    struct Point p1, p2, p3, p;
+    struct Tri t;
+
+    int i, j, k;
+    
+    for (i = 0; i < nx + 1; i++) {
+        for (j = 0; j < ny + 1; j++) {
+            for (k = 0; k < nz + 1; k++) {
+                struct Point p = create_point(size * i, 
+                                              size * j, 
+                                              size * k, 1);
+                //print_point(&p); 
+                points[i][j][k] = p;
+            }
+        }
+    }
+
+    // XY PLANES
+
+    int count = 0;
+
+    for (i = 0; i < nx; i++) {
+        for (j = 0; j < ny; j++) {
+            for (k = 0; k < nz + 1; k++) {
+
+                p1 = points[i][j][k];
+                p2 = points[i][j+1][k]; 
+                p3 = points[i+1][j+1][k]; 
+
+                t = create_tri(p1.x, p1.y, p1.z, p1.w,
+                               p2.x, p2.y, p2.z, p2.w,
+                               p3.x, p3.y, p3.z, p3.w, 
+                               0xffffffff);
+
+                tris[count++] = t;
+
+                p1 = points[i][j][k];
+                p2 = points[i+1][j+1][k];
+                p3 = points[i+1][j][k];
+
+                t = create_tri(p1.x, p1.y, p1.z, p1.w,
+                               p2.x, p2.y, p2.z, p2.w,
+                               p3.x, p3.y, p3.z, p3.w, 
+                               0xffffffff);
+
+                tris[count++] = t;
+            }   
+        }
+    }
+    //printf("count: %d\n", count);
+
+    // YZ PLANES
+    
+    for (i = 0; i < nx + 1; i++) {
+        for (j = 0; j < ny; j++) {
+            for (k = 0; k < nz; k++) {
+
+                p1 = points[i][j][k];
+                p2 = points[i][j+1][k]; 
+                p3 = points[i][j][k+1]; 
+
+                t = create_tri(p1.x, p1.y, p1.z, p1.w,
+                               p2.x, p2.y, p2.z, p2.w,
+                               p3.x, p3.y, p3.z, p3.w, 
+                               0xffffffff);
+                tris[count++] = t;
+
+                p1 = points[i][j][k+1];
+                p2 = points[i][j+1][k];
+                p3 = points[i][j+1][k+1];
+
+                t = create_tri(p1.x, p1.y, p1.z, p1.w,
+                               p2.x, p2.y, p2.z, p2.w,
+                               p3.x, p3.y, p3.z, p3.w, 
+                               0xffffffff);
+
+                tris[count++] = t;
+            }   
+        }
+    }
+
+    //printf("count: %d\n", count);
+    
+    // XZ PLANES
+
+    for (i = 0; i < nx; i++) {
+        for (j = 0; j < ny + 1; j++) {
+            for (k = 0; k < nz; k++) {
+
+                p1 = points[i][j][k];
+                p2 = points[i+1][j][k]; 
+                p3 = points[i+1][j][k+1]; 
+
+                t = create_tri(p1.x, p1.y, p1.z, p1.w,
+                               p2.x, p2.y, p2.z, p2.w,
+                               p3.x, p3.y, p3.z, p3.w, 
+                               0xffffffff);
+                tris[count++] = t;
+
+                p1 = points[i][j][k];
+                p2 = points[i+1][j][k+1];
+                p3 = points[i][j][k+1];
+
+                t = create_tri(p1.x, p1.y, p1.z, p1.w,
+                               p2.x, p2.y, p2.z, p2.w,
+                               p3.x, p3.y, p3.z, p3.w, 
+                               0xffffffff);
+                
+                tris[count++] = t;
+            }   
+        }
+    }
+    //printf("count: %d\n", count);
+    return tris;
+}
+
